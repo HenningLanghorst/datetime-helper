@@ -7,3 +7,9 @@ edition = "2021"
 
 [dependencies]
 chrono = "0.4.23"
+clap = { version = "4.1.4", features = ["derive"] }
+thiserror = "1.0.38"
+
+[[bin]]
+name = "datetime"
+path = "src/main.rs"
