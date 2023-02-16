@@ -68,7 +68,8 @@ fn print_time(datetime: DateTime<Utc>) {
 }
 
 fn get_datetime(input: &str) -> Result<DateTime<Utc>, DateTimeError> {
-    match (iso_to_datetime(input), epoch_to_datetime(input)) {
+    let trimmed = input.trim();
+    match (iso_to_datetime(trimmed), epoch_to_datetime(trimmed)) {
         (Ok(datetime), _) => Ok(datetime),
         (_, Ok(datetime)) => Ok(datetime),
         (Err(e1), Err(e2)) => Err(MultipleErrors(Box::new(e1), Box::new(e2))),
@@ -88,5 +89,94 @@ fn epoch_to_datetime(input: &str) -> Result<DateTime<Utc>, DateTimeError> {
         (Single(datetime), _) if datetime.year() < 3000 => Ok(datetime),
         (_, Single(datetime)) => Ok(datetime),
         _ => Err(DateTimeError::InvalidEpochTime(epoch_time)),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::get_datetime;
+
+    #[test]
+    fn iso_8601_inclusive_milliseconds() {
+        let input = "2023-02-16T12:34:56.789Z";
+        let date_time = get_datetime(input).unwrap();
+        assert_eq!(date_time.timestamp_millis(), 1676550896789);
+    }
+
+    #[test]
+    fn iso_8601_inclusive_milliseconds_starting_with_spaces() {
+        let input = " 2023-02-16T12:34:56.789Z";
+        let date_time = get_datetime(input).unwrap();
+        assert_eq!(date_time.timestamp_millis(), 1676550896789);
+    }
+
+    #[test]
+    fn iso_8601_inclusive_milliseconds_ending_with_spaces() {
+        let input = "2023-02-16T12:34:56.789Z ";
+        let date_time = get_datetime(input).unwrap();
+        assert_eq!(date_time.timestamp_millis(), 1676550896789);
+    }
+
+    #[test]
+    fn iso_8601() {
+        let input = "2023-02-16T12:34:56Z";
+        let date_time = get_datetime(input).unwrap();
+        assert_eq!(date_time.timestamp_millis(), 1676550896000);
+    }
+
+    #[test]
+    fn iso_8601_starting_with_spaces() {
+        let input = " 2023-02-16T12:34:56Z";
+        let date_time = get_datetime(input).unwrap();
+        assert_eq!(date_time.timestamp_millis(), 1676550896000);
+    }
+
+    #[test]
+    fn iso_8601_ending_with_spaces() {
+        let input = "2023-02-16T12:34:56Z ";
+        let date_time = get_datetime(input).unwrap();
+        assert_eq!(date_time.timestamp_millis(), 1676550896000);
+    }
+
+    #[test]
+    fn epoch_seconds() {
+        let input = "1676550896";
+        let date_time = get_datetime(input).unwrap();
+        assert_eq!(date_time.timestamp_millis(), 1676550896000);
+    }
+
+    #[test]
+    fn epoch_seconds_starting_with_spaces() {
+        let input = " 1676550896";
+        let date_time = get_datetime(input).unwrap();
+        assert_eq!(date_time.timestamp_millis(), 1676550896000);
+    }
+
+    #[test]
+    fn epoch_seconds_ending_with_spaces() {
+        let input = "1676550896 ";
+        let date_time = get_datetime(input).unwrap();
+        assert_eq!(date_time.timestamp_millis(), 1676550896000);
+    }
+
+    #[test]
+    fn epoch_milliseconds() {
+        let input = "1676550896789";
+        let date_time = get_datetime(input).unwrap();
+        assert_eq!(date_time.timestamp_millis(), 1676550896789);
+    }
+
+    #[test]
+    fn epoch_milliseconds_starting_with_spaces() {
+        let input = " 1676550896789";
+        let date_time = get_datetime(input).unwrap();
+        assert_eq!(date_time.timestamp_millis(), 1676550896789);
+    }
+
+    #[test]
+    fn epoch_milliseconds_ending_with_spaces() {
+        let input = "1676550896789 ";
+        let date_time = get_datetime(input).unwrap();
+        assert_eq!(date_time.timestamp_millis(), 1676550896789);
     }
 }
